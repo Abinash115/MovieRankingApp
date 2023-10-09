@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Rank App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #container {
+            width: 90%;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        #movie-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #movie-title,
+        #movie-rating {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        #movie-title {
+            margin-right: 10px;
+        }
+
+        #movie-rating {
+            width: 80px;
+        }
+
+        button[type="submit"] {
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .movie {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 5px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .movie span {
+            flex: 1;
+        }
+
+        .movie .movie-title {
+            font-weight: bold;
+        }
+
+        .movie .movie-rating {
+            font-size: 18px;
+        }
+
+        .movie .movie-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .movie button {
+            padding: 5px 10px;
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .movie button:hover {
+            background-color: #bb2d3b;
+        }
+
+        #sort-button {
+            display: block;
+            margin: 20px auto;
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #sort-button:hover {
+            background-color: #218838;
+        }
+
+        .section {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .recommended {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .not-recommended {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .average {
+            background-color: #ffc107;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Movie Rank App</h1>
+        <form id="movie-form">
+            <label for="movie-title">Movie Title:</label>
+            <input type="text" id="movie-title" required>
+            <label for="movie-rating">Rating (1-10):</label>
+            <input type="number" id="movie-rating" min="1" max="10" required>
+            <button type="submit">Add Movie</button>
+        </form>
+        <button id="sort-button">Sort by Rating</button>
+        <h2>Movie List</h2>
+        <div id="recommended" class="section recommended">Recommended Movies</div>
+        <ul id="recommended-list"></ul>
+        <div id="not-recommended" class="section not-recommended">Not Recommended Movies</div>
+        <ul id="not-recommended-list"></ul>
+        <div id="average" class="section average">Average Movies</div>
+        <ul id="average-list"></ul>
+    </div>
+
+    <script>
+        const movieForm = document.getElementById('movie-form');
+        const recommendedList = document.getElementById('recommended-list');
+        const notRecommendedList = document.getElementById('not-recommended-list');
+        const averageList = document.getElementById('average-list');
+        const sortButton = document.getElementById('sort-button');
+        let movies = [];
+
+        movieForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const title = document.getElementById('movie-title').value;
+            const rating = document.getElementById('movie-rating').value;
+
+            if (title.trim() === '' || rating < 1 || rating > 10) {
+                alert('Please enter a valid movie title and rating (1-10).');
+                return;
+            }
+
+            const movieItem = {
+                title: title,
+                rating: parseInt(rating)
+            };
+
+            movies.push(movieItem);
+
+            const listItem = document.createElement('li');
+            listItem.classList.add('movie');
+            listItem.innerHTML = `
+                <span class="movie-title">${movieItem.title}</span>
+                <span class="movie-rating">Rating: ${movieItem.rating}</span>
+                <div class="movie-actions">
+                    <button class="edit">Edit</button>
+                    <button class="delete">Delete</button>
+                </div>
+            `;
+
+            if (movieItem.rating > 8) {
+                recommendedList.appendChild(listItem);
+            } else if (movieItem.rating <= 5) {
+                notRecommendedList.appendChild(listItem);
+            } else {
+                averageList.appendChild(listItem);
+            }
+
+            // Clear input fields
+            document.getElementById('movie-title').value = '';
+            document.getElementById('movie-rating').value = '';
+
+            // Add event listener to delete button
+            const deleteButton = listItem.querySelector('.delete');
+            deleteButton.addEventListener('click', function () {
+                movies = movies.filter(movie => movie.title !== movieItem.title);
+                listItem.remove();
+                updateRecommendation();
+            });
+
+            // Add event listener to edit button
+            const editButton = listItem.querySelector('.edit');
+            editButton.addEventListener('click', function () {
+                const newRating = prompt('Enter a new rating (1-10):', movieItem.rating);
+                if (newRating !== null && !isNaN(newRating) && newRating >= 1 && newRating <= 10) {
+                    movieItem.rating = parseInt(newRating);
+                    listItem.querySelector('.movie-rating').textContent = `Rating: ${newRating}`;
+                    updateRecommendation();
+                } else {
+                    alert('Please enter a valid rating (1-10).');
+                }
+            });
+
+            // Update movie recommendation
+            updateRecommendation();
+        });
+
+        sortButton.addEventListener('click', function () {
+            movies.sort((a, b) => b.rating - a.rating);
+
+            while (recommendedList.firstChild) {
+                recommendedList.firstChild.remove();
+            }
+            while (notRecommendedList.firstChild) {
+                notRecommendedList.firstChild.remove();
+            }
+            while (averageList.firstChild) {
+                averageList.firstChild.remove();
+            }
+
+            movies.forEach(movie => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('movie');
+                listItem.innerHTML = `
+                    <span class="movie-title">${movie.title}</span>
+                    <span class="movie-rating">Rating: ${movie.rating}</span>
+                    <div class="movie-actions">
+                        <button class="edit">Edit</button>
+                        <button class="delete">Delete</button>
+                    </div>
+                `;
+
+                if (movie.rating > 8) {
+                    recommendedList.appendChild(listItem);
+                } else if (movie.rating <= 5) {
+                    notRecommendedList.appendChild(listItem);
+                } else {
+                    averageList.appendChild(listItem);
+                }
+
+                const deleteButton = listItem.querySelector('.delete');
+                deleteButton.addEventListener('click', function () {
+                    movies = movies.filter(m => m.title !== movie.title);
+                    listItem.remove();
+                    updateRecommendation();
+                });
+
+                const editButton = listItem.querySelector('.edit');
+                editButton.addEventListener('click', function () {
+                    const newRating = prompt('Enter a new rating (1-10):', movie.rating);
+                    if (newRating !== null && !isNaN(newRating) && newRating >= 1 && newRating <= 10) {
+                        movie.rating = parseInt(newRating);
+                        listItem.querySelector('.movie-rating').textContent = `Rating: ${newRating}`;
+                        updateRecommendation();
+                    } else {
+                        alert('Please enter a valid rating (1-10).');
+                    }
+                });
+            });
+
+            updateRecommendation();
+        });
+
+        function updateRecommendation() {
+            const recommended = [];
+            const notRecommended = [];
+            const average = [];
+
+            movies.forEach(movie => {
+                if (movie.rating > 8) {
+                    recommended.push(movie);
+                } else if (movie.rating <= 5) {
+                    notRecommended.push(movie);
+                } else {
+                    average.push(movie);
+                }
+            });
+
+            recommendedList.innerHTML = '';
+            notRecommendedList.innerHTML = '';
+            averageList.innerHTML = '';
+
+            recommended.forEach(movie => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('movie');
+                listItem.innerHTML = `
+                    <span class="movie-title">${movie.title}</span>
+                    <span class="movie-rating">Rating: ${movie.rating}</span>
+                    <div class="movie-actions">
+                        <button class="edit">Edit</button>
+                        <button class="delete">Delete</button>
+                    </div>
+                `;
+                recommendedList.appendChild(listItem);
+            });
+
+            notRecommended.forEach(movie => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('movie');
+                listItem.innerHTML = `
+                    <span class="movie-title">${movie.title}</span>
+                    <span class="movie-rating">Rating: ${movie.rating}</span>
+                    <div class="movie-actions">
+                        <button class="edit">Edit</button>
+                        <button class="delete">Delete</button>
+                    </div>
+                `;
+                notRecommendedList.appendChild(listItem);
+            });
+
+            average.forEach(movie => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('movie');
+                listItem.innerHTML = `
+                    <span class="movie-title">${movie.title}</span>
+                    <span class="movie-rating">Rating: ${movie.rating}</span>
+                    <div class="movie-actions">
+                        <button class="edit">Edit</button>
+                        <button class="delete">Delete</button>
+                    </div>
+                `;
+                averageList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
